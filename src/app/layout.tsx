@@ -1,5 +1,4 @@
 // app/layout.tsx
-import './globals.css' // Optional if using Tailwind or global styles
 
 export const metadata = {
   title: 'Aya Harmony Chat',
