@@ -1,5 +1,4 @@
-// app/layout.tsx
-
+// src/app/layout.tsx
 export const metadata = {
   title: 'Aya Harmony Chat',
   description: 'Minimal chat app',
