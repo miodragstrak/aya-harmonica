@@ -29,7 +29,7 @@ export async function POST(req: Request) {
       replies: [
         {
           sender: 'AI',
-          content: data[0]?.reply || 'No reply from AI',
+           content: data.output || 'No reply from AI',
         },
       ],
     })
