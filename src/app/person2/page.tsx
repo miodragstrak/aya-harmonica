@@ -1,53 +1,71 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
+
+type Reply = {
+  sender: string
+  content: string
+}
 
 export default function Person2Page() {
-  const [joined, setJoined] = useState(false)
   const [input, setInput] = useState('')
   const [messages, setMessages] = useState<string[]>([])
+  const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  const joinChat = async () => {
-    await fetch('/api/join', { method: 'POST' })
-    setJoined(true)
-  }
-
-  const sendMessage = async (e: React.KeyboardEvent) => {
+  const sendMessage = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && input.trim()) {
-      const msg = input.trim()
-      setMessages(prev => [`You: ${msg}`, ...prev])
+      const userMsg = input.trim()
+      setMessages(prev => [...prev, `You: ${userMsg}`])
       setInput('')
 
-      // Simulate response (you can expand this to actually send messages to Person 1)
+      const res = await fetch('/api/message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: userMsg, person2Joined: true }), // override AI
+      })
+
+      const data = await res.json()
+      data.replies?.forEach((m: Reply) =>
+        setMessages(prev => [...prev, `${m.sender}: ${m.content}`])
+      )
     }
   }
 
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
+
   return (
-    <div className="p-4 max-w-xl mx-auto">
-      <h1 className="text-xl font-bold mb-2">Person 2 Chat</h1>
-      {!joined ? (
-        <button
-          className="bg-blue-500 text-white px-4 py-2 rounded"
-          onClick={joinChat}
-        >
-          Join Chat
-        </button>
-      ) : (
-        <>
-          <div className="border h-64 overflow-y-scroll p-2 flex flex-col-reverse mb-2">
-            {messages.map((m, i) => (
-              <div key={i}>{m}</div>
-            ))}
-          </div>
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={sendMessage}
-            className="w-full border p-2"
-            placeholder="Type and press Enter"
-          />
-        </>
-      )}
+    <div className="flex flex-col h-screen max-w-2xl mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4 text-center">Person 2 Chat</h1>
+
+      <div className="flex-1 overflow-y-auto space-y-2 mb-4 p-2 border rounded bg-gray-50">
+        {messages.map((m, i) => {
+          const isUser = m.startsWith('You:')
+          return (
+            <div
+              key={i}
+              className={`p-2 rounded-lg max-w-[75%] whitespace-pre-wrap ${
+                isUser
+                  ? 'bg-green-500 text-white self-end ml-auto'
+                  : 'bg-gray-200 text-gray-900 self-start mr-auto'
+              }`}
+            >
+              {m}
+            </div>
+          )
+        })}
+        <div ref={messagesEndRef} />
+      </div>
+
+      <input
+        type="text"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        onKeyDown={sendMessage}
+        placeholder="Type your message..."
+        className="p-3 border rounded focus:outline-none focus:ring-2 focus:ring-green-400"
+      />
     </div>
   )
 }
