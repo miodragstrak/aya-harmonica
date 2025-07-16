@@ -11,7 +11,7 @@ export async function POST(req: Request) {
       })
     }
 
-    const res = await fetch("https://mstrak.app.n8n.cloud/webhook/n8b-webhook", {
+    const res = await fetch(process.env.N8N_WEBHOOK_URL!, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify([
